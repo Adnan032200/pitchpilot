@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator — PitchPilot's Angelic Chamber</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #04030a;
+            color: #fdf8ff; 
+            overflow-x: hidden; 
+            cursor: none;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        .serif { font-family: 'Cormorant Garamond', serif; }
+
+        /* ═══ EGG CURSOR (Angelic Gold/Pink) ═══ */
+        #eggCursor {
+            position: fixed;
+            width: 22px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 100000;
+            transform: translate(-50%, -50%);
+            transition: width 0.15s ease, height 0.15s ease;
+            filter: 
+                drop-shadow(0 0 6px rgba(255, 215, 0, 0.9))
+                drop-shadow(0 0 12px rgba(255, 182, 193, 0.6));
+        }
+        #eggCursor svg { width: 100%; height: 100%; }
+        @keyframes eggBounce {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+            50% { transform: translate(-50%, -50%) rotate(2deg); }
+        }
+        #eggCursor.bounce { animation: eggBounce 1.5s ease-in-out infinite; }
+
+        /* ═══ DRAGON SVG ═══ */
+        #dragonSvg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 99999;
+            overflow: visible;
+            opacity: 0.95;
+        }
+
+        /* ═══ ANGELIC BACKGROUND ═══ */
+        .bg-canvas { position: fixed; inset: 0; z-index: -5; pointer-events: none; }
+        
+        .heaven-aurora {
+            position: fixed; top: -20%; left: -20%; width: 140vw; height: 80vh;
+            z-index: -4; pointer-events: none; filter: blur(90px); opacity: 0.5;
+        }
+        .heaven-aurora-1 {
+            background: linear-gradient(90deg, transparent, #fff8dc60, #ffd70060, transparent);
+            animation: heavenSweep1 20s infinite ease-in-out;
+        }
+        .heaven-aurora-2 {
+            background: linear-gradient(90deg, transparent, #e6e6fa60, #ffb6c160, transparent);
+            top: 25%; animation: heavenSweep2 26s infinite ease-in-out;
+        }
+        .heaven-aurora-3 {
+            background: linear-gradient(90deg, transparent, #fffacd60, #ffe4e160, transparent);
+            top: 60%; animation: heavenSweep3 22s infinite ease-in-out;
+        }
+        @keyframes heavenSweep1 { 0%,100%{transform:translateX(-25%) rotate(-5deg);opacity:0.3} 50%{transform:translateX(25%) rotate(5deg);opacity:0.65} }
+        @keyframes heavenSweep2 { 0%,100%{transform:translateX(25%) rotate(3deg);opacity:0.35} 50%{transform:translateX(-25%) rotate(-3deg);opacity:0.7} }
+        @keyframes heavenSweep3 { 0%,100%{transform:translateX(-15%) rotate(-2deg);opacity:0.3} 50%{transform:translateX(15%) rotate(4deg);opacity:0.6} }
+        
+        /* Sun rays */
+        .rays-bg {
+            position: fixed;
+            top: 0; left: 50%;
+            width: 200vmax; height: 200vmax;
+            transform: translate(-50%, -80%) rotate(0deg);
+            z-index: -3;
+            pointer-events: none;
+            opacity: 0.06;
+            background: conic-gradient(from 0deg,
+                transparent 0deg, #ffd700 2deg, transparent 4deg,
+                transparent 15deg, #fff8dc 17deg, transparent 19deg,
+                transparent 40deg, #ffd700 42deg, transparent 44deg,
+                transparent 60deg, #fff8dc 62deg, transparent 64deg,
+                transparent 90deg, #ffd700 92deg, transparent 94deg,
+                transparent 110deg, #fff8dc 112deg, transparent 114deg,
+                transparent 140deg, #ffd700 142deg, transparent 144deg,
+                transparent 160deg, #fff8dc 162deg, transparent 164deg,
+                transparent 190deg, #ffd700 192deg, transparent 194deg,
+                transparent 210deg, #fff8dc 212deg, transparent 214deg,
+                transparent 240deg, #ffd700 242deg, transparent 244deg,
+                transparent 260deg, #fff8dc 262deg, transparent 264deg,
+                transparent 290deg, #ffd700 292deg, transparent 294deg,
+                transparent 310deg, #fff8dc 312deg, transparent 314deg,
+                transparent 340deg, #ffd700 342deg, transparent 344deg,
+                transparent 358deg, #fff8dc 360deg);
+            animation: raysRotate 180s linear infinite;
+        }
+        @keyframes raysRotate {
+            to { transform: translate(-50%, -80%) rotate(360deg); }
+        }
+
+        /* ═══ FORM INPUTS ═══ */
+        .angel-input {
+            background: rgba(255, 248, 220, 0.03);
+            border: 1px solid rgba(255, 215, 0, 0.18);
+            color: #fff;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-family: 'Inter', sans-serif;
+        }
+        .angel-input::placeholder { color: rgba(255, 248, 220, 0.35); }
+        .angel-input:focus {
+            outline: none;
+            background: rgba(255, 248, 220, 0.07);
+            border-color: rgba(255, 215, 0, 0.7);
+            box-shadow: 
+                0 0 0 4px rgba(255, 215, 0, 0.12),
+                0 0 40px rgba(255, 215, 0, 0.3),
+                inset 0 0 20px rgba(255, 215, 0, 0.05);
+            transform: translateY(-2px);
+        }
+        .angel-input:hover { border-color: rgba(255, 215, 0, 0.4); }
+        select.angel-input option { background: #0a0514; color: #fff; }
+
+        /* ═══ GLASS CARD ═══ */
+        .glass {
+            background: linear-gradient(135deg, rgba(255, 248, 220, 0.05), rgba(255, 215, 0, 0.02));
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 15px 50px -15px rgba(255, 215, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 248, 220, 0.1), transparent);
+            transition: left 1.2s ease;
+            pointer-events: none;
+        }
+        .glass:hover::before { left: 100%; }
+
+        /* ═══ BUTTON ═══ */
+        .btn-angel {
+            position: relative; overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.55),
+                0 0 60px rgba(255, 182, 193, 0.35);
+            background-size: 300% 300%;
+            animation: btnShimmer 5s ease infinite;
+        }
+        @keyframes btnShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .btn-angel::after {
+            content: ''; 
+            position: absolute; 
+            top: 0; left: -100%; 
+            width: 60%; height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent);
+            transform: skewX(-25deg); 
+            transition: all 0.9s ease;
+        }
+        .btn-angel:hover::after { left: 200%; }
+        .btn-angel:hover { 
+            box-shadow: 
+                0 0 70px rgba(255, 215, 0, 1),
+                0 0 130px rgba(255, 182, 193, 0.7);
+            transform: translateY(-4px) scale(1.02); 
+        }
+
+        /* ═══ LOADING BUTTERFLY ═══ */
+        .loading-butterfly {
+            width: 80px;
+            height: 80px;
+            animation: loadingSpin 3s linear infinite;
+        }
+        @keyframes loadingSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        /* ═══ RESULT CARDS ═══ */
+        .result-card {
+            background: linear-gradient(135deg, rgba(255, 248, 220, 0.05), rgba(255, 215, 0, 0.02));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.22);
+            position: relative;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+        .result-card:hover {
+            border-color: rgba(255, 215, 0, 0.55);
+            box-shadow: 
+                0 25px 50px -15px rgba(255, 215, 0, 0.3),
+                0 0 35px rgba(255, 182, 193, 0.2);
+            transform: translateY(-6px);
+        }
+
+        /* ═══ COPY BUTTON ═══ */
+        .copy-btn {
+            transition: all 0.3s ease;
+            background: rgba(255, 248, 220, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            color: #ffd700;
+        }
+        .copy-btn:hover {
+            background: rgba(255, 215, 0, 0.18);
+            border-color: rgba(255, 215, 0, 0.7);
+            transform: scale(1.06);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        /* ═══ TOAST ═══ */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: linear-gradient(135deg, rgba(255, 248, 220, 0.2), rgba(255, 215, 0, 0.15));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            color: #fff;
+            padding: 16px 34px;
+            border-radius: 50px;
+            font-weight: 500;
+            z-index: 100000;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(255, 215, 0, 0.4);
+            opacity: 0;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* ═══ TEXT GRADIENT ═══ */
+        .text-heaven {
+            background: linear-gradient(135deg, #ffd700 0%, #fff8dc 30%, #ffb6c1 60%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 300% 300%;
+            animation: heavenShift 7s ease infinite;
+            filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.5));
+        }
+        @keyframes heavenShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .divider-heaven {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #ffd700, #fff8dc, #ffb6c1, transparent);
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .reveal { opacity: 0; transform: translateY(50px); transition: all 1.2s cubic-bezier(0.5, 0, 0, 1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .float-slow { animation: floatY 7s ease-in-out infinite; }
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .pulse-heaven { animation: pulseH 2.5s infinite; }
+        @keyframes pulseH {
+            0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+        }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #04030a; }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, #ffd700, #ffb6c1, #fff8dc);
+            border-radius: 10px;
+            border: 2px solid #04030a;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen relative">
+    
+    <!-- ═══ EGG CURSOR ═══ -->
+    <div id="eggCursor" class="bounce">
+        <svg viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <radialGradient id="eggGrad" cx="35%" cy="30%">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="30%" stop-color="#fff8dc"/>
+                    <stop offset="60%" stop-color="#ffd700"/>
+                    <stop offset="100%" stop-color="#ffb6c1"/>
+                </radialGradient>
+                <radialGradient id="eggHighlight" cx="35%" cy="25%">
+                    <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                    <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                </radialGradient>
+                <filter id="eggShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-color="#000" flood-opacity="0.5"/>
+                </filter>
+            </defs>
+            <ellipse cx="20" cy="26" rx="13" ry="18" fill="url(#eggGrad)" filter="url(#eggShadow)"/>
+            <ellipse cx="20" cy="26" rx="13" ry="18" fill="none" stroke="#8b6914" stroke-width="0.8" opacity="0.7"/>
+            <ellipse cx="14" cy="18" rx="5" ry="7" fill="url(#eggHighlight)" opacity="0.85"/>
+            <circle cx="26" cy="22" r="1.2" fill="#8b6914" opacity="0.3"/>
+            <circle cx="24" cy="33" r="0.8" fill="#8b6914" opacity="0.3"/>
+            <circle cx="17" cy="37" r="1" fill="#8b6914" opacity="0.25"/>
+        </svg>
+    </div>
+
+    <!-- ═══ DRAGON SVG (Angelic Gold/Pink) ═══ -->
+    <svg id="dragonSvg" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <g id="Cabeza" transform="matrix(1, 0, 0, 1, 0, 0)">
+                <path style="fill:#FFFFFF;fill-opacity:1" d="M-28.9,-1.1L-28.55 -1.95Q-28.1 -3.1 -27.25 -2.95L-26.7 -2.95Q-27.7 -1.65 -28.9 -1.1M-18.35,-1.8Q-15.1 -10.3 -9.6 -6.05Q-15.1 -6.2 -18.35 -1.8M-18.35,1.1Q-15.1 5.45 -9.6 5.35Q-15.1 9.55 -18.35 1.1M-26.7,2.2L-27.25 2.25Q-28.1 2.4 -28.55 1.2L-28.9 0.35Q-27.7 0.9 -26.7 2.2" />
+                <path style="fill:#000000;fill-opacity:1" d="M-21.05,-8.25Q-13.6 -15.95 -1.3 -12.1Q-7.85 -8.5 -5.85 -4.35Q-2.3 -4.85 10.5 0.15Q0 4.35 -5.85 3.65Q-7.85 7.75 -1.25 12.45Q-13.6 15.2 -21.05 7.5Q-29.55 4.05 -30.2 -0.35Q-29.55 -4.8 -21.05 -8.25M-26.7,-2.95L-27.25 -2.95Q-28.1 -3.1 -28.55 -1.95L-28.9 -1.1Q-27.7 -1.65 -26.7 -2.95M-9.6,-6.05Q-15.1 -10.3 -18.35 -1.8Q-15.1 -6.2 -9.6 -6.05M-9.6,5.35Q-15.1 5.45 -18.35 1.1Q-15.1 9.55 -9.6 5.35M-28.9,0.35L-28.55 1.2Q-28.1 2.4 -27.25 2.25L-26.7 2.2Q-27.7 0.9 -28.9 0.35" />
+            </g>
+            <g id="Aletas" transform="matrix(1, 0, 0, 1, 0, 0)">
+                <linearGradient id="LinearGradID_1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.0935974, 0, 0, 0.188782, -20.55, 0)" spreadMethod="pad" x1="-819.2" y1="0" x2="819.2" y2="0">
+                    <stop offset="0" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="1" style="stop-color:#FF69B4;stop-opacity:1" />
+                </linearGradient>
+                <path style="fill:url(#LinearGradID_1)" d="M29.75,-36.85Q-17.75 -61.45 -42.05 -40.95L-45.35 -38.35L-53.7 -41.15L-51.15 -44.85Q-34.85 -68.4 21 -57.8Q-32.2 -72.1 -50.25 -50Q-53.85 -45.65 -56.05 -41.95L-64.7 -43.35L-60.6 -50.3Q-45.9 -75.55 5.1 -79.35Q-2.2 -79.8 -9.45 -79.15Q-16.2 -78.55 -22.85 -77.15Q-29.85 -75.65 -36.5 -73Q-43.05 -70.4 -48.8 -66.85Q-54.55 -63.35 -56.8 -60.3L-60.5 -55.4Q-62.95 -52.1 -67 -43.55L-70.55 -43.55L-76.35 -42.95Q-74.6 -49.1 -71.85 -54.85Q-68.9 -61.25 -64.8 -67.1Q-60.8 -73 -55.45 -77.55Q-49.9 -82.35 -43.65 -85.85L-30.6 -92.7Q-24.05 -95.95 -17 -98.25Q-63.75 -86.35 -73.65 -57.1Q-75.75 -50.75 -77.45 -42.75Q-82.9 -41.75 -88 -39.65Q-87.65 -46.65 -86.3 -53.05Q-79.8 -89.8 -36.65 -117.2Q-80.65 -94.5 -87.55 -59.55Q-88.65 -54.15 -88.95 -39.4L-89.8 -38.85L-92.7 -37.6Q-93.75 -44.35 -94.1 -51.15Q-94.4 -58.2 -93.25 -65.1Q-92.15 -72.5 -90.05 -79.65Q-88.05 -86.55 -85 -93Q-82.1 -99.3 -78.45 -105.15Q-74.6 -111.35 -70.25 -117.25Q-65.95 -123.1 -61.1 -128.55Q-70.3 -119.35 -77.9 -108.7Q-86 -97.3 -90.8 -84.05Q-95.8 -70.5 -96 -56.15Q-96.1 -46 -94.05 -36.05L-93.25 -31.55Q-93.5 -35.65 -92.35 -36Q-79.85 -42 -66.6 -40.45Q-52.45 -38.85 -39.2 -33.25Q-28.3 -29.9 -21.25 -24.15Q-17.8 -23.3 -8.6 -15.6Q-12.1 -20.75 -16.75 -24.5Q-24.55 -30.7 -34.25 -34.05L-42.55 -37Q-38.9 -41.25 -31.5 -43.25Q-24.05 -45.3 -16.2 -46.3Q-8.35 -47.35 -1 -46Q5.95 -44.75 12.75 -42.85Q19.85 -40.9 29.75 -36.85M-92.45,-27.35L-94.95 -36.25Q-109.7 -105 -27.95 -154.65Q-98.65 -103.8 -91.75 -39.4L-89.95 -40.2Q-92.2 -105.25 -5.6 -130.9Q-78.8 -99.95 -87.45 -40.9Q-83.15 -42.95 -78.45 -43.95Q-70 -101.3 17.65 -103.8Q-56.9 -93.4 -74.5 -44.55L-67.4 -45.45Q-49.1 -94.95 39.25 -75.65Q-36.75 -84.35 -62.25 -44.25L-57.3 -43.6Q-31.65 -86.5 56.15 -46.05Q-20.3 -73.35 -51.35 -41.7L-45.95 -39.75Q-17.85 -71.35 51.85 -24.8Q-8.7 -56.4 -39.75 -37.05Q-28.15 -34.05 -14.25 -24.45Q-8.6 -19.85 -5.8 -16.95Q5.95 -2.4 20 0Q5.95 2.4 -5.8 16.95Q-8.6 19.85 -14.25 24.45Q-28.15 34.05 -39.75 37.05Q-8.7 56.4 51.85 24.8Q-17.85 71.35 -45.95 39.75L-51.35 41.7Q-20.3 73.35 56.15 46.1Q-31.65 86.5 -57.3 43.65L-62.25 44.3Q-36.75 84.35 39.25 75.7Q-49.1 94.95 -67.4 45.5L-74.5 44.6Q-56.9 93.4 17.65 103.85Q-70 101.3 -78.45 43.95Q-83.15 42.95 -87.45 40.9Q-78.8 99.95 -5.6 130.9Q-92.2 105.25 -89.95 40.25L-91.75 39.4Q-98.65 103.8 -27.95 154.65Q-109.7 105 -94.95 36.3L-92.45 27.35Q-93.05 33.9 -92.05 34.75Q-91.1 35.55 -88.95 36.7L-87.95 37Q-83.7 38.25 -79.05 38.8L-77.25 38.95Q-72.55 39.3 -67.5 38.85L-65.45 38.65Q-44.4 36.05 -17.8 19.6Q-9.9 12.8 -15.15 4.4Q-18.15 3.15 -19 0Q-18.15 -3.15 -15.15 -4.4Q-9.9 -12.8 -17.8 -19.6L-17.8 -19.55Q-44.4 -36.05 -65.45 -38.6L-67.5 -38.8Q-72.55 -39.3 -77.25 -38.95L-79.05 -38.75Q-83.7 -38.25 -87.95 -36.95L-88.95 -36.65Q-91.1 -35.55 -92.05 -34.7Q-93.05 -33.9 -92.45 -27.35M-8.6,15.6Q-17.8 23.3 -21.25 24.2Q-28.3 29.9 -39.2 33.3Q-52.45 38.85 -66.6 40.5Q-79.85 42 -92.35 36Q-93.5 35.65 -93.25 31.55L-94.05 36.1Q-96.1 46.05 -96 56.15Q-95.8 70.5 -90.8 84.1Q-86 97.3 -77.9 108.75Q-70.3 119.35 -61.1 128.6Q-65.95 123.1 -70.25 117.25Q-74.6 111.35 -78.45 105.15Q-82.1 99.3 -85 93Q-88.05 86.55 -90.05 79.7Q-92.15 72.5 -93.25 65.1Q-94.4 58.2 -94.1 51.2Q-93.75 44.35 -92.7 37.6L-89.8 38.9L-88.95 39.45Q-88.65 54.15 -87.55 59.55Q-80.65 94.5 -36.65 117.25Q-79.8 89.8 -86.3 53.1Q-87.65 46.65 -88 39.65Q-82.9 41.75 -77.45 42.75Q-75.75 50.75 -73.65 57.15Q-63.75 86.35 -17 98.3Q-24.05 95.95 -30.6 92.75L-43.65 85.9Q-49.9 82.35 -55.45 77.6Q-60.8 73 -64.8 67.15Q-68.9 61.25 -71.85 54.85Q-74.6 49.1 -76.35 42.95L-70.55 43.6L-67 43.6Q-62.95 52.1 -60.5 55.4L-56.8 60.35Q-54.55 63.35 -48.8 66.9Q-43.05 70.4 -36.5 73Q-29.85 75.65 -22.85 77.15Q-16.2 78.55 -9.45 79.15Q-2.2 79.8 5.1 79.35Q-45.9 75.55 -60.6 50.3L-64.7 43.4L-56.05 41.95Q-53.85 45.65 -50.25 50Q-32.2 72.1 21 57.85Q-34.85 68.4 -51.15 44.85L-53.7 41.2L-45.35 38.35L-42.05 40.95Q-17.75 61.45 29.75 36.85Q19.85 40.9 12.75 42.9Q5.95 44.75 -1 46Q-8.35 47.35 -16.2 46.35Q-24.05 45.3 -31.5 43.3Q-38.9 41.25 -42.55 37.05L-34.25 34.05Q-24.55 30.7 -16.75 24.5Q-12.1 20.75 -8.6 15.6" />
+            </g>
+            <g id="Espina" transform="matrix(1, 0, 0, 1, 0, 0)">
+                <linearGradient id="LinearGradID_2" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.0229492, 0, 0, -0.0152893, 0, 0.05)" spreadMethod="pad" x1="-819.2" y1="0" x2="819.2" y2="0">
+                    <stop offset="0" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="1" style="stop-color:#8B6914;stop-opacity:1" />
+                </linearGradient>
+                <path style="fill:url(#LinearGradID_2)" d="M-18.8,0Q-17.85 -5.7 -12.3 -9.6Q-11.2 -5.35 -6.5 -8.25L-6.45 -8.2L-6.2 -8.3Q1.25 -16.25 6.65 -12.4Q0.05 -12.55 0 -5.95Q2.7 -2.4 7.75 -4.1Q18 -1.45 18.8 0L-18.8 0" />
+                <linearGradient id="LinearGradID_3" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.0229492, 0, 0, 0.0152893, 0, -0.05)" spreadMethod="pad" x1="-819.2" y1="0" x2="819.2" y2="0">
+                    <stop offset="0" style="stop-color:#FFD700;stop-opacity:1" />
+                    <stop offset="1" style="stop-color:#8B6914;stop-opacity:1" />
+                </linearGradient>
+                <path style="fill:url(#LinearGradID_3)" d="M18.8,0Q18 1.45 7.75 4.1Q2.7 2.4 0 5.95Q0.05 12.55 6.65 12.4Q1.25 16.25 -6.2 8.35Q-6.35 8.25 -6.45 8.25L-6.5 8.25Q-11.2 5.35 -12.3 9.6Q-17.85 5.7 -18.8 0L18.8 0" />
+            </g>
+        </defs>
+        <g id="screen" />
+    </svg>
+
+    <!-- ═══ BACKGROUND ═══ -->
+    <canvas id="constellation" class="bg-canvas"></canvas>
+    <div class="heaven-aurora heaven-aurora-1"></div>
+    <div class="heaven-aurora heaven-aurora-2"></div>
+    <div class="heaven-aurora heaven-aurora-3"></div>
+    <div class="rays-bg"></div>
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 top-0 border-b border-yellow-500/10 bg-[#04030a]/70 backdrop-blur-2xl">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+            <a href="index.html" class="flex items-center gap-3 group">
+                <div class="w-11 h-11 bg-gradient-to-br from-yellow-300 via-amber-400 to-pink-400 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-yellow-400/70 transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <span class="font-bold tracking-tight text-white serif text-3xl">PitchPilot</span>
+            </a>
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <a href="generator.html" class="text-yellow-300 font-semibold relative group">
+                    Generator
+                    <span class="absolute -bottom-1 left-0 w-full h-px bg-gradient-to-r from-yellow-300 to-pink-400"></span>
+                </a>
+                <a href="pricing.html" class="hover:text-yellow-300 transition-colors duration-300 relative group">
+                    Pricing
+                    <span class="absolute -bottom-1 left-0 w-0 h-px bg-gradient-to-r from-yellow-300 to-pink-400 group-hover:w-full transition-all duration-500"></span>
+                </a>
+                <a href="about.html" class="hover:text-yellow-300 transition-colors duration-300 relative group">
+                    About
+                    <span class="absolute -bottom-1 left-0 w-0 h-px bg-gradient-to-r from-yellow-300 to-pink-400 group-hover:w-full transition-all duration-500"></span>
+                </a>
+                <a href="index.html" class="bg-gradient-to-r from-yellow-400/10 to-pink-400/10 hover:from-yellow-400/30 hover:to-pink-400/30 text-white px-6 py-2.5 rounded-full border border-yellow-400/40 hover:border-yellow-300/80 transition-all duration-300 hover:scale-105">
+                    🏠 Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-6 pt-40 pb-24 relative z-10">
+        
+        <div class="text-center mb-12 reveal">
+            <div class="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-400/10 via-pink-400/10 to-amber-400/10 border border-yellow-400/30 text-yellow-200 px-7 py-3 rounded-full text-sm font-medium mb-8 pulse-heaven float-slow backdrop-blur-md">
+                <span class="text-xl">✨</span>
+                <span class="tracking-[0.2em] uppercase">Angelic Writing Chamber</span>
+                <span class="text-xl">✨</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 text-white serif">
+                Let's craft your <span class="text-heaven italic">masterpiece</span>
+            </h1>
+            <div class="divider-heaven w-40 mx-auto my-6"></div>
+            <p class="text-gray-300 text-lg max-w-xl mx-auto">Fill the form below and watch your perfect proposal bloom like heaven's flowers.</p>
+        </div>
+
+        <div class="glass p-8 md:p-12 rounded-[2rem] reveal">
+            
+            <!-- FORM SECTION -->
+            <div id="formSection">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-yellow-200/90 mb-2 tracking-wide flex items-center gap-2">
+                            <span class="text-lg">📜</span> Client's Job Description <span class="text-pink-400">*</span>
+                        </label>
+                        <textarea id="jobDesc" rows="5" 
+                            class="angel-input w-full p-4 rounded-xl text-white resize-none" 
+                            placeholder="Paste the job description from Upwork, Fiverr, or LinkedIn here..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-yellow-200/90 mb-2 tracking-wide flex items-center gap-2">
+                            <span class="text-lg">✨</span> Your Skills <span class="text-pink-400">*</span>
+                        </label>
+                        <input type="text" id="skills" 
+                            class="angel-input w-full p-4 rounded-xl text-white" 
+                            placeholder="e.g. WordPress, SEO, Graphic Design, Python...">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-yellow-200/90 mb-2 tracking-wide flex items-center gap-2">
+                                <span class="text-lg">👤</span> Your Name <span class="text-pink-400">*</span>
+                            </label>
+                            <input type="text" id="name" 
+                                class="angel-input w-full p-4 rounded-xl text-white" 
+                                placeholder="e.g. Ali Khan">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-yellow-200/90 mb-2 tracking-wide flex items-center gap-2">
+                                <span class="text-lg">🎭</span> Tone
+                            </label>
+                            <select id="tone" class="angel-input w-full p-4 rounded-xl text-white">
+                                <option value="Professional">👔 Professional</option>
+                                <option value="Friendly">😊 Friendly</option>
+                                <option value="Confident">💪 Confident</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateProposal()" id="generateBtn" 
+                        class="btn-angel w-full bg-gradient-to-r from-yellow-300 via-amber-400 to-pink-400 text-black font-bold py-5 rounded-xl text-lg mt-4">
+                        ✨ Generate My Heavenly Proposal
+                    </button>
+                    
+                    <p class="text-center text-xs text-gray-400 pt-2">
+                        <span class="text-yellow-400">✦</span> 3 free proposals per month. No credit card required. <span class="text-yellow-400">✦</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- LOADING -->
+            <div id="loading" class="hidden text-center py-16">
+                <div class="loading-butterfly mx-auto mb-6">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <defs>
+                            <radialGradient id="lw1" cx="50%" cy="50%"><stop offset="0%" stop-color="#fffbe6"/><stop offset="50%" stop-color="#ffd700"/><stop offset="100%" stop-color="#ff8c00"/></radialGradient>
+                            <radialGradient id="lw2" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffe6f5"/><stop offset="50%" stop-color="#ff69b4"/><stop offset="100%" stop-color="#c71585"/></radialGradient>
+                        </defs>
+                        <path d="M50 48 Q44 25, 34 20" stroke="#ffd700" stroke-width="2" fill="none"/>
+                        <path d="M50 48 Q56 25, 66 20" stroke="#ffd700" stroke-width="2" fill="none"/>
+                        <circle cx="34" cy="20" r="3" fill="#fff"/><circle cx="66" cy="20" r="3" fill="#fff"/>
+                        <path d="M50 50 C22 12, -10 20, 5 48 C18 75, 40 60, 50 50" fill="url(#lw1)" opacity="0.9"/>
+                        <path d="M50 50 C78 12, 110 20, 95 48 C82 75, 60 60, 50 50" fill="url(#lw2)" opacity="0.9"/>
+                        <ellipse cx="50" cy="52" rx="3" ry="14" fill="#1a0033" stroke="#ffd700" stroke-width="0.8"/>
+                        <circle cx="50" cy="44" r="4.5" fill="#ffd700"/>
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-white serif mb-3">Crafting your masterpiece...</h3>
+                <p class="text-gray-400">Our AI is weaving magic into words. Just a moment. ✨</p>
+                <div class="flex justify-center gap-2 mt-6">
+                    <span class="w-2 h-2 rounded-full bg-yellow-400 animate-bounce" style="animation-delay: 0s"></span>
+                    <span class="w-2 h-2 rounded-full bg-pink-400 animate-bounce" style="animation-delay: 0.15s"></span>
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-bounce" style="animation-delay: 0.3s"></span>
+                </div>
+            </div>
+
+            <!-- RESULT -->
+            <div id="resultSection" class="hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white serif">Your Proposal <span class="text-heaven">✨</span></h2>
+                        <p class="text-gray-400 text-sm mt-1">Copy each section or the full proposal below.</p>
+                    </div>
+                    <button onclick="resetForm()" class="text-sm text-yellow-300 hover:text-yellow-200 underline underline-offset-4 transition">
+                        ← Start Over
+                    </button>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="result-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-yellow-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="text-base">🎯</span> Hook
+                            </span>
+                            <button onclick="copyText('outHook')" class="copy-btn text-xs px-4 py-1.5 rounded-full font-medium">📋 Copy</button>
+                        </div>
+                        <p id="outHook" class="text-gray-100 leading-relaxed text-lg"></p>
+                    </div>
+
+                    <div class="result-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-pink-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="text-base">💎</span> Body
+                            </span>
+                            <button onclick="copyText('outBody')" class="copy-btn text-xs px-4 py-1.5 rounded-full font-medium">📋 Copy</button>
+                        </div>
+                        <p id="outBody" class="text-gray-100 leading-relaxed text-lg"></p>
+                    </div>
+
+                    <div class="result-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-bold text-amber-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                                <span class="text-base">🚀</span> Call to Action
+                            </span>
+                            <button onclick="copyText('outCta')" class="copy-btn text-xs px-4 py-1.5 rounded-full font-medium">📋 Copy</button>
+                        </div>
+                        <p id="outCta" class="text-gray-100 leading-relaxed text-lg"></p>
+                    </div>
+                </div>
+
+                <button onclick="copyFull()" 
+                    class="btn-angel w-full bg-gradient-to-r from-yellow-300 via-amber-400 to-pink-400 text-black font-bold py-5 rounded-xl text-lg mt-6">
+                    📋 Copy Full Proposal
+                </button>
+
+                <button onclick="resetForm()" 
+                    class="w-full mt-4 py-3 rounded-xl text-gray-300 hover:text-white glass transition">
+                    Generate Another Proposal
+                </button>
+            </div>
+        </div>
+
+        <p class="text-center text-gray-500 text-sm mt-8">
+            💡 Tip: Each proposal is uniquely crafted. Regenerate for a fresh perspective!
+        </p>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <span id="toastText">✨ Copied!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-yellow-500/10 py-14 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-400 text-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-br from-yellow-300 via-amber-400 to-pink-400 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <span class="font-bold text-white serif text-xl">PitchPilot</span>
+            </div>
+            <p class="flex items-center gap-2">Made with <span class="text-yellow-300 text-lg animate-pulse">✨</span> for freelancers. © 2026 PitchPilot</p>
+            <div class="flex gap-6">
+                <a href="about.html" class="hover:text-yellow-300 transition-colors duration-300">About</a>
+                <a href="contact.html" class="hover:text-yellow-300 transition-colors duration-300">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // ✅ API CALL — Ab Netlify Function use ho rahi hai (SECURE)
+        // API key frontend mein NAHI hai — Netlify mein safe hai
+        // ═══════════════════════════════════════════════════════════
+        const API_URL = "/.netlify/functions/generate";
+
+        // ═══ EGG CURSOR ═══
+        const eggCursor = document.getElementById('eggCursor');
+        document.addEventListener('mousemove', (e) => {
+            eggCursor.style.left = e.clientX + 'px';
+            eggCursor.style.top = e.clientY + 'px';
+        });
+        document.addEventListener('mousedown', () => {
+            eggCursor.style.transform = 'translate(-50%, -50%) scale(0.85)';
+        });
+        document.addEventListener('mouseup', () => {
+            eggCursor.style.transform = 'translate(-50%, -50%) scale(1)';
+        });
+
+        // ═══ DRAGON ═══
+        const screen = document.getElementById("screen");
+        const xmlns = "http://www.w3.org/2000/svg";
+        const xlinkns = "http://www.w3.org/1999/xlink";
+
+        const resize = () => { width = window.innerWidth; height = window.innerHeight; };
+        let width, height;
+        window.addEventListener("resize", () => resize(), false);
+        resize();
+
+        const prepend = (use, i) => {
+            const elem = document.createElementNS(xmlns, "use");
+            elems[i].use = elem;
+            elem.setAttributeNS(xlinkns, "xlink:href", "#" + use);
+            screen.prepend(elem);
+        };
+
+        const N = 40;
+        const elems = [];
+        for (let i = 0; i < N; i++) elems[i] = { use: null, x: width / 2, y: 0 };
+        const pointer = { x: width / 2, y: height / 2 };
+        const radm = Math.min(pointer.x, pointer.y) - 20;
+        let frm = Math.random();
+        let rad = 0;
+
+        for (let i = 1; i < N; i++) {
+            if (i === 1) prepend("Cabeza", i);
+            else if (i === 8 || i === 14) prepend("Aletas", i);
+            else prepend("Espina", i);
+        }
+
+        window.addEventListener("pointermove", (e) => {
+            pointer.x = e.clientX;
+            pointer.y = e.clientY;
+            rad = 0;
+        }, false);
+
+        const run = () => {
+            requestAnimationFrame(run);
+            let e = elems[0];
+            const ax = Math.cos(3 * frm) * rad * width / height;
+            const ay = Math.sin(4 * frm) * rad * height / width;
+            e.x += (ax + pointer.x - e.x) / 10;
+            e.y += (ay + pointer.y - e.y) / 10;
+            
+            for (let i = 1; i < N; i++) {
+                let e = elems[i];
+                let ep = elems[i - 1];
+                const a = Math.atan2(e.y - ep.y, e.x - ep.x);
+                e.x += (ep.x - e.x + (Math.cos(a) * (100 - i)) / 25) / 4;
+                e.y += (ep.y - e.y + (Math.sin(a) * (100 - i)) / 25) / 4;
+                const s = (162 + 4 * (1 - i)) / 250;
+                e.use.setAttributeNS(
+                    null,
+                    "transform",
+                    `translate(${(ep.x + e.x) / 2},${(ep.y + e.y) / 2}) rotate(${
+                        (180 / Math.PI) * a
+                    }) translate(${0},${0}) scale(${s},${s})`
+                );
+            }
+            if (rad < radm) rad++;
+            frm += 0.003;
+            if (rad > 60) {
+                pointer.x += (width / 2 - pointer.x) * 0.05;
+                pointer.y += (height / 2 - pointer.y) * 0.05;
+            }
+        };
+        run();
+
+        // ═══ CONSTELLATION ═══
+        const canvas = document.getElementById('constellation');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        let mouse = { x: -1000, y: -1000 };
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars();
+        }
+        function initStars() {
+            stars = [];
+            const count = Math.min(Math.floor(window.innerWidth / 14), 130);
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    radius: Math.random() * 1.5 + 0.5,
+                    color: Math.random() > 0.5 ? '#ffd700' : (Math.random() > 0.5 ? '#fff8dc' : '#ffb6c1'),
+                    twinkle: Math.random() * Math.PI * 2
+                });
+            }
+        }
+        document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+        function drawConstellation() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < stars.length; i++) {
+                for (let j = i + 1; j < stars.length; j++) {
+                    const dx = stars[i].x - stars[j].x;
+                    const dy = stars[i].y - stars[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 130) {
+                        ctx.beginPath();
+                        ctx.moveTo(stars[i].x, stars[i].y);
+                        ctx.lineTo(stars[j].x, stars[j].y);
+                        ctx.strokeStyle = `rgba(255, 215, 0, ${(1 - dist / 130) * 0.18})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            stars.forEach(star => {
+                star.x += star.vx; star.y += star.vy; star.twinkle += 0.02;
+                if (star.x < 0) star.x = canvas.width;
+                if (star.x > canvas.width) star.x = 0;
+                if (star.y < 0) star.y = canvas.height;
+                if (star.y > canvas.height) star.y = 0;
+                const dx = mouse.x - star.x;
+                const dy = mouse.y - star.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 200) { star.x -= dx * 0.002; star.y -= dy * 0.002; }
+                const op = 0.5 + Math.sin(star.twinkle) * 0.5;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = star.color;
+                ctx.globalAlpha = op;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            });
+            requestAnimationFrame(drawConstellation);
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        drawConstellation();
+
+        // ═══ SCROLL REVEAL ═══
+        const revealEls = document.querySelectorAll('.reveal');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('active');
+            });
+        }, { threshold: 0.1 });
+        revealEls.forEach(el => observer.observe(el));
+
+        // ═══ PROPOSAL GENERATION (via Netlify Function) ═══
+        async function generateProposal() {
+            const jobDesc = document.getElementById('jobDesc').value.trim();
+            const skills = document.getElementById('skills').value.trim();
+            const name = document.getElementById('name').value.trim();
+            const tone = document.getElementById('tone').value;
+
+            if (!jobDesc || !skills || !name) {
+                showToast("⚠️ Please fill all required fields");
+                return;
+            }
+
+            document.getElementById('formSection').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobDesc, skills, name, tone })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.error) {
+                    throw new Error(result.error || `Server error: ${response.status}`);
+                }
+
+                document.getElementById('outHook').innerText = result.hook;
+                document.getElementById('outBody').innerText = result.body;
+                document.getElementById('outCta').innerText = result.cta;
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('resultSection').classList.remove('hidden');
+                showToast("✨ Your heavenly proposal is ready!");
+
+            } catch (error) {
+                showToast("❌ Error: " + error.message);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('formSection').classList.remove('hidden');
+            }
+        }
+
+        function copyText(id) {
+            const text = document.getElementById(id).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("✨ Copied to clipboard!");
+            });
+        }
+
+        function copyFull() {
+            const hook = document.getElementById('outHook').innerText;
+            const body = document.getElementById('outBody').innerText;
+            const cta = document.getElementById('outCta').innerText;
+            navigator.clipboard.writeText(`${hook}\n\n${body}\n\n${cta}`).then(() => {
+                showToast("🌟 Full proposal copied!");
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('resultSection').classList.add('hidden');
+            document.getElementById('formSection').classList.remove('hidden');
+            document.getElementById('jobDesc').value = '';
+            document.getElementById('skills').value = '';
+            document.getElementById('name').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastText').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>
