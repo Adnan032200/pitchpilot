@@ -762,7 +762,18 @@
                 const result = await response.json();
 
                 if (!response.ok || result.error) {
-                    throw new Error(result.error || `Server error: ${response.status}`);
+                    const serverMessage =
+                        (typeof result.error === 'string' && result.error) ||
+                        result.error?.message ||
+                        result.message ||
+                        `Server error: ${response.status}`;
+                    throw new Error(serverMessage);
+                }
+
+                if (typeof result.hook !== 'string' ||
+                    typeof result.body !== 'string' ||
+                    typeof result.cta !== 'string') {
+                    throw new Error('The server returned an unexpected proposal format. Please try again.');
                 }
 
                 document.getElementById('outHook').innerText = result.hook;
