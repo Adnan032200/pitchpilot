@@ -1,5 +1,5 @@
 exports.handler = async (event, context) => {
-    // CORS Headers
+    // ═══ CORS Headers ═══
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -7,12 +7,11 @@ exports.handler = async (event, context) => {
         'Content-Type': 'application/json'
     };
 
-    // Handle OPTIONS (CORS preflight)
+    // Only allow POST
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
 
-    // Only allow POST
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
     }
@@ -35,14 +34,14 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // API Key from Netlify Environment Variables
+    // Your Groq API Key (set this in Netlify Environment Variables)
     const API_KEY = process.env.GROQ_API_KEY;
 
     if (!API_KEY) {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'API key not configured' })
+            body: JSON.stringify({ error: 'API key not configured. Please set GROQ_API_KEY in Netlify environment variables.' })
         };
     }
 
@@ -66,7 +65,8 @@ Tone: ${tone || 'Professional'}`;
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: 'llama-3.3-70b-versatile',
+                // ✅ Nayi Model (100% Free & Fast)
+                model: 'llama-3.1-8b-instant', 
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
@@ -79,6 +79,7 @@ Tone: ${tone || 'Professional'}`;
 
         const data = await response.json();
 
+        // Handle API errors
         if (!response.ok || data.error) {
             const errMsg = data.error?.message || `API error: ${response.status}`;
             return {
@@ -92,11 +93,12 @@ Tone: ${tone || 'Professional'}`;
         text = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const result = JSON.parse(text);
 
+        // Validate the result has all required keys
         if (!result.hook || !result.body || !result.cta) {
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({ error: 'AI response missing required fields' })
+                body: JSON.stringify({ error: 'AI response missing required fields (hook, body, cta)' })
             };
         }
 
@@ -110,7 +112,7 @@ Tone: ${tone || 'Professional'}`;
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: error.message || 'Unknown error' })
+            body: JSON.stringify({ error: error.message || 'Unknown error occurred' })
         };
     }
 };
