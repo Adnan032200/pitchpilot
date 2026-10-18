@@ -25,7 +25,6 @@ exports.handler = async (event, context) => {
 
     const { jobDesc, skills, name, tone } = body;
 
-    // Validate inputs
     if (!jobDesc || !skills || !name) {
         return { 
             statusCode: 400, 
@@ -34,7 +33,6 @@ exports.handler = async (event, context) => {
         };
     }
 
-    // Your Groq API Key (set this in Netlify Environment Variables)
     const API_KEY = process.env.GROQ_API_KEY;
 
     if (!API_KEY) {
@@ -57,62 +55,67 @@ Write a SHORT proposal (max 150 words) with 3 clearly separated parts:
 3. CALL TO ACTION: One simple next-step question.
 Tone: ${tone || 'Professional'}`;
 
-    try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_KEY}`
-            },
-            body: JSON.stringify({
-                // ✅ Nayi Model (100% Free & Fast)
-                model: 'llama-3.1-8b-instant', 
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                response_format: { type: 'json_object' },
-                temperature: 0.7,
-                max_tokens: 500
-            })
-        });
+    // Models to try one by one if the first one fails
+    const modelsToTry = [
+        'llama-3.3-70b-versatile', // 1st Choice: Best Quality
+        'openai/gpt-oss-20b',      // 2nd Choice: Fast & Reliable
+        'openai/gpt-oss-120b'      // 3rd Choice: Backup
+    ];
 
-        const data = await response.json();
+    let lastError = 'Unknown error occurred';
 
-        // Handle API errors
-        if (!response.ok || data.error) {
-            const errMsg = data.error?.message || `API error: ${response.status}`;
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ error: errMsg })
-            };
+    for (const model of modelsToTry) {
+        try {
+            console.log(`Attempting generation with model: ${model}`);
+            
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    response_format: { type: 'json_object' },
+                    temperature: 0.7,
+                    max_tokens: 500
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && !data.error) {
+                // Success! Parse and return result
+                let text = data.choices[0].message.content;
+                text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                const result = JSON.parse(text);
+
+                if (result.hook && result.body && result.cta) {
+                    return {
+                        statusCode: 200,
+                        headers,
+                        body: JSON.stringify(result)
+                    };
+                }
+            } else {
+                // If this model fails, save the error and try the next one
+                lastError = data.error?.message || `API error: ${response.status}`;
+                console.error(`Model ${model} failed: ${lastError}`);
+            }
+        } catch (error) {
+            lastError = error.message;
+            console.error(`Model ${model} threw exception: ${lastError}`);
         }
-
-        let text = data.choices[0].message.content;
-        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const result = JSON.parse(text);
-
-        // Validate the result has all required keys
-        if (!result.hook || !result.body || !result.cta) {
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ error: 'AI response missing required fields (hook, body, cta)' })
-            };
-        }
-
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify(result)
-        };
-
-    } catch (error) {
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ error: error.message || 'Unknown error occurred' })
-        };
     }
+
+    // Agar saare models fail ho jayein
+    return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: `All models failed. Last error: ${lastError}` })
+    };
 };
